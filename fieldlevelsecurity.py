@@ -2,15 +2,9 @@ import os
 import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
-#new
 import pandas as pd
-#import xlwt
-#from xlwt.Workbook import *
 from pandas import ExcelWriter
-import pandas.io.formats.excel
-
-#import xlsxwriter
-#new end
+import xlsxwriter
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
@@ -136,53 +130,31 @@ def read_permission_file(file_path, file_name):
 
 
 def write_output_permission_file():
-    ftpData = pd.DataFrame.from_dict(data=fieldToPermissionsForOutput, orient="index")
-    otpData = pd.DataFrame.from_dict(data=objectToPermissionsForOutput, orient="index")
-    upData = pd.DataFrame.from_dict(data=userPermissionsForOutput, orient="index")
     writer = pd.ExcelWriter('DataDictionaryResults.xlsx')
-    pandas.io.formats.excel.header_style = None
-    ftpData.to_excel(writer, index=True, header=False, sheet_name='Field Permissions')
-    otpData.to_excel(writer, index=False, header=False, sheet_name='Object Permissions')
-    upData.to_excel(writer, index=True, header=False, sheet_name='User Permissions')
+    add_sheet_to_writer(writer, fieldToPermissionsForOutput, 'Field Permissions')
+    add_sheet_to_writer(writer, objectToPermissionsForOutput, 'Object Permissions')
+    add_sheet_to_writer(writer, userPermissionsForOutput, 'User Permissions')
     workbook = writer.book
     header_format = workbook.add_format({
         'bold': True})
-    ftpWorksheet = writer.sheets['Field Permissions']
-    ftpWorksheet.set_column('A:A', None, header_format)
-    ftpWorksheet.set_row(0, None, header_format)
-    ftpWorksheet.freeze_panes(1, 1)
-    otpWorksheet = writer.sheets['Object Permissions']
-    otpWorksheet.set_column('A:A', None, header_format)
-    otpWorksheet.set_row(0, None, header_format)
-    otpWorksheet.freeze_panes(1, 1)
-    upWorksheet = writer.sheets['User Permissions']
-    upWorksheet.set_column('A:A', None, header_format)
-    upWorksheet.set_row(0, None, header_format)
-    upWorksheet.freeze_panes(1, 1)
+    format_worksheet(writer, 'Field Permissions', header_format)
+    format_worksheet(writer, 'Object Permissions', header_format)
+    format_worksheet(writer, 'User Permissions', header_format)
     writer.save()
-"""
-This is the old version of the output that would write to csv files
-    with open('fieldpermissionsoutput.csv', mode='w') as output_file:
-        output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
-        for key, value in fieldToPermissionsForOutput.items():
-            row = [key]
-            row.extend(value)
-            output_writer.writerow(row)
 
-    with open('objectpermissionsoutput.csv', mode='w') as output_file:
-        output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
-        for key, value in objectToPermissionsForOutput.items():
-            row = [key]
-            row.extend(value)
-            output_writer.writerow(row)
 
-    with open('userpermissionsoutput.csv', mode='w') as output_file:
-        output_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL, lineterminator = '\n')
-        for key, value in userPermissionsForOutput.items():
-            row = [key]
-            row.extend(value)
-            output_writer.writerow(row)
-"""
+def add_sheet_to_writer(writer, datainput, sheet_name):
+    dfData = pd.DataFrame.from_dict(data=datainput, orient='index')
+    dfData.to_excel(writer, index=True, header=False, sheet_name=sheet_name)
+
+
+def format_worksheet(writer, worksheet_name, format):
+    worksheet = writer.sheets[worksheet_name]
+    # reformat here column
+    worksheet.set_column('A:A', None, format)
+    worksheet.set_row(0, None, format)
+    worksheet.freeze_panes(1, 1)
+
 
 # Begin execution
 tkinter.Tk().withdraw()
