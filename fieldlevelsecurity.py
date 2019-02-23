@@ -139,7 +139,11 @@ def write_output_permission_file():
     populate_format_worksheet(wsf, fieldToPermissionsForOutput)
     populate_format_worksheet(wso, objectToPermissionsForOutput)
     populate_format_worksheet(wsu, userPermissionsForOutput)
-    wb.save('DataDictionaryResults.xlsx')
+    try:
+        wb.save('DataDictionaryResults.xlsx')
+    except PermissionError as e:
+        print(e)
+        print('Please make sure to close out of the DataDictionaryResults.xlsx file before running this tool.')
 
 
 def populate_format_worksheet(worksheet, dataInput):
@@ -168,5 +172,4 @@ for folder in permSubFolders:
     for file_name in os.listdir(src_folder_path+folder):
         read_permission_file(src_folder_path+folder+'/'+file_name, file_name)
 #TODO if success close the window, if error leave open
-#TODO add friendly error if document is open
 write_output_permission_file()
