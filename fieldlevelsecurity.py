@@ -3,10 +3,9 @@ import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
 import pandas as pd
-#from pandas import ExcelWriter
-#import xlsxwriter
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Font
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
@@ -135,43 +134,27 @@ def write_output_permission_file():
     wb = openpyxl.Workbook()
     wsf = wb.active
     wsf.title = 'Field Permissions'
-    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=fieldToPermissionsForOutput, orient='index'), index=True, header=False):
-        wsf.append(r)
-    wsf.delete_rows(1,1)
-    wso = wb.create_sheet("Object Permissions")
-    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=objectToPermissionsForOutput, orient='index'), index=True, header=False):
-        wso.append(r)
-    wso.delete_rows(1,1)
-    wsu = wb.create_sheet("User Permissions")
-    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=userPermissionsForOutput, orient='index'), index=True, header=False):
-        wsu.append(r)
-    wsu.delete_rows(1,1)
-    #freeze column a and row 1 and make bold
-    wb.save("DataDictionaryResults2.xlsx")
-    """writer = pd.ExcelWriter('DataDictionaryResults.xlsx')
-    add_sheet_to_writer(writer, fieldToPermissionsForOutput, 'Field Permissions')
-    add_sheet_to_writer(writer, objectToPermissionsForOutput, 'Object Permissions')
-    add_sheet_to_writer(writer, userPermissionsForOutput, 'User Permissions')
-    workbook = writer.book
-    header_format = workbook.add_format({
-        'bold': True})
-    format_worksheet(writer, 'Field Permissions', header_format)
-    format_worksheet(writer, 'Object Permissions', header_format)
-    format_worksheet(writer, 'User Permissions', header_format)
-    writer.save()
+    wso = wb.create_sheet('Object Permissions')
+    wsu = wb.create_sheet('User Permissions')
+    populate_format_worksheet(wsf, fieldToPermissionsForOutput)
+    populate_format_worksheet(wso, objectToPermissionsForOutput)
+    populate_format_worksheet(wsu, userPermissionsForOutput)
+    wb.save('DataDictionaryResults.xlsx')
 
 
-def add_sheet_to_writer(writer, datainput, sheet_name):
-    dfData = pd.DataFrame.from_dict(data=datainput, orient='index')
-    dfData.to_excel(writer, index=True, header=False, sheet_name=sheet_name)
-
-
-def format_worksheet(writer, worksheet_name, format):
-    worksheet = writer.sheets[worksheet_name]
-    # reformat here column
-    worksheet.set_column('A:A', None, format)
-    worksheet.set_row(0, None, format)
-    worksheet.freeze_panes(1, 1)"""
+def populate_format_worksheet(worksheet, dataInput):
+    df = pd.DataFrame.from_dict(data=dataInput, orient='index')
+    for r in dataframe_to_rows(df, index=True, header=False):
+        worksheet.append(r)
+    worksheet.delete_rows(1,1)
+    worksheet['A1'].value = 'API Name'
+    header_font = openpyxl.styles.Font(bold=True)
+    for cell in worksheet['1:1']:
+        cell.font = header_font
+    for cell in worksheet['A:A']:
+        cell.font = header_font
+    cell = worksheet['B2']
+    worksheet.freeze_panes = cell
 
 
 # Begin execution
@@ -184,5 +167,6 @@ for file_name in os.listdir(src_folder_path+'/objects'):
 for folder in permSubFolders:
     for file_name in os.listdir(src_folder_path+folder):
         read_permission_file(src_folder_path+folder+'/'+file_name, file_name)
-
+#TODO if success close the window, if error leave open
+#TODO add friendly error if document is open
 write_output_permission_file()
