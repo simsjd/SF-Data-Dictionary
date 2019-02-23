@@ -3,8 +3,10 @@ import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
 import pandas as pd
-from pandas import ExcelWriter
-import xlsxwriter
+#from pandas import ExcelWriter
+#import xlsxwriter
+import openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
@@ -27,18 +29,18 @@ def read_object_file(file_path):
             objectFieldDetailMap[objectName][fieldName] = [elem.find(nsp+'label').text]
         else:
             objectFieldDetailMap[objectName][fieldName] = ['-']
-        if elem.find(nsp+'type') is not None:
-            objectFieldDetailMap[objectName][fieldName].append(elem.find(nsp+'type').text)
-        else:
-            objectFieldDetailMap[objectName][fieldName].append('-')
-        if elem.find(nsp+'description') is not None:
-            objectFieldDetailMap[objectName][fieldName].append(elem.find(nsp+'description').text)
-        else:
-            objectFieldDetailMap[objectName][fieldName].append('-')
+        add_additional_field_information(elem, objectName, fieldName, 'type')
+        add_additional_field_information(elem, objectName, fieldName, 'description')
+
+
+def add_additional_field_information(elem, objectName, fieldName, elemText):
+    if elem.find(nsp+elemText) is not None:
+        objectFieldDetailMap[objectName][fieldName].append(elem.find(nsp+elemText).text)
+    else:
+        objectFieldDetailMap[objectName][fieldName].append('-')
 
 
 def read_permission_file(file_path, file_name):
-    #TODO eventually use the <label> tag value instead of file file name
     tree = ET.parse(file_path)
     root = tree.getroot()
 
@@ -130,7 +132,23 @@ def read_permission_file(file_path, file_name):
 
 
 def write_output_permission_file():
-    writer = pd.ExcelWriter('DataDictionaryResults.xlsx')
+    wb = openpyxl.Workbook()
+    wsf = wb.active
+    wsf.title = 'Field Permissions'
+    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=fieldToPermissionsForOutput, orient='index'), index=True, header=False):
+        wsf.append(r)
+    wsf.delete_rows(1,1)
+    wso = wb.create_sheet("Object Permissions")
+    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=objectToPermissionsForOutput, orient='index'), index=True, header=False):
+        wso.append(r)
+    wso.delete_rows(1,1)
+    wsu = wb.create_sheet("User Permissions")
+    for r in dataframe_to_rows(pd.DataFrame.from_dict(data=userPermissionsForOutput, orient='index'), index=True, header=False):
+        wsu.append(r)
+    wsu.delete_rows(1,1)
+    #freeze column a and row 1 and make bold
+    wb.save("DataDictionaryResults2.xlsx")
+    """writer = pd.ExcelWriter('DataDictionaryResults.xlsx')
     add_sheet_to_writer(writer, fieldToPermissionsForOutput, 'Field Permissions')
     add_sheet_to_writer(writer, objectToPermissionsForOutput, 'Object Permissions')
     add_sheet_to_writer(writer, userPermissionsForOutput, 'User Permissions')
@@ -153,7 +171,7 @@ def format_worksheet(writer, worksheet_name, format):
     # reformat here column
     worksheet.set_column('A:A', None, format)
     worksheet.set_row(0, None, format)
-    worksheet.freeze_panes(1, 1)
+    worksheet.freeze_panes(1, 1)"""
 
 
 # Begin execution
