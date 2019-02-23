@@ -1,0 +1,58 @@
+Headers,Admin.profile,Analytics Cloud Integration User.profile,Analytics Cloud Security User.profile,Chatter External User.profile,Chatter Free User.profile,Chatter Moderator User.profile,Chatter Only User.profile,Company Communities User.profile,ContractManager.profile,CPQ Integration User.profile,Customer Community Login User.profile,Customer Community Plus Login User.profile,Customer Community Plus User.profile,Customer Community User.profile,External Identity User.profile,Guest License User.profile,High Volume Customer Portal User.profile,MarketingProfile.profile,Partner Community Login User.profile,Partner Community User.profile,ReadOnly.profile,Restaurant POC.profile,Restaurant Portal Profile.profile,SolutionManager.profile,Staff.profile,Standard.profile,StandardAul.profile,Work%2Ecom Only User.profile,Field_Service_Mobile_Permission.permissionset,Files_Connect.permissionset,Inspector.permissionset,Platform_Encryption_Management.permissionset,Restaurant_POC_Knowledge.permissionset,Supervisor.permissionset
+Account,ModifyAll,R VA,R VA,-,-,-,R,C R U D,C R U D,R VA,R U,C R U,C R U,R U,R U,-,R U,C R U D,C R U,C R U,R,R U,-,C R U D,R,C R U D,C R U D,-,-,-,C R U VA,-,-,C R U VA
+AccountBrand,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+Address,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+Asset,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U D,ModifyAll,C R U,C R U,C R U,C R U,C R U,-,C R U,C R U D,C R U,C R U,R,C R U,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+Campaign,ModifyAll,R VA,R VA,-,-,-,-,-,R,-,-,-,-,-,-,-,-,C R U D,R,R,R,-,-,R,R,R,-,-,-,-,-,-,-,-
+Case,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,R,-,C R U,R,C R U,-,-,-,-,C R U VA,-,-,C R U VA
+ChannelProgram,ModifyAll,R VA,-,-,-,-,-,-,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,R,-,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+ChannelProgramLevel,ModifyAll,R VA,-,-,-,-,-,-,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,R,-,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+ChannelProgramMember,ModifyAll,R VA,-,-,-,-,-,-,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,R,-,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+Contact,ModifyAll,R VA,R VA,-,-,-,R,C R U D,C R U D,R VA,C R U,C R U,C R U,C R U,C R U,-,C R U,C R U D,C R U,C R U,R,C R U,-,C R U D,R,C R U D,C R U D,-,-,-,C R U VA,-,-,C R U VA
+ContactRequest,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,C R U,-,-,-,-,-,-,-,-
+Contract,ModifyAll,R VA,R VA,-,-,-,-,-,C R U D,ModifyAll,C R U D,C R U D,C R U D,C R U D,-,-,C R U D,C R U D,C R U D,C R U D,R,C R U D,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+DuplicateRecordSet,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+Idea,ModifyAll,R VA,R VA,-,-,-,C R,C R,C R,-,C R,C R,C R,C R,-,R,C R,C R,C R,C R,R,C R,-,C R,R,C R,C R,-,-,-,-,-,-,-
+Image,ModifyAll,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+Inspection_Document__c,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,C R,-,-,-,-,-,-,-,-,C R U VA,-,-,C R U VA
+Inspection_Task__c,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,R,-,-,-,-,-,-,-,-,C R U VA,-,-,C R U VA
+Knowledge__kav,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,C R VA,-,-,-,-,-,-,-,-,-,-,C R VA,-
+Lead,ModifyAll,R VA,R VA,-,-,-,-,-,C R U D,-,-,-,-,-,-,-,-,C R U D,C R U,C R U,R,-,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+Location,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+Macro,ModifyAll,R VA,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,R,-,-,-,R,R,-,-,-,-,-,-,-,-
+MaintenancePlan,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+OperatingHours,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+Opportunity,ModifyAll,R VA,R VA,-,-,-,-,-,C R U D,ModifyAll,-,-,-,-,-,-,-,C R U D,C R U,C R U,R,-,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+Order,ModifyAll,R VA,R VA,-,-,-,-,-,C R U D,ModifyAll,C R U D,C R U D,C R U D,C R U D,-,-,C R U D,C R U D,C R U D,C R U D,R,C R U D,-,C R U D,R,C R U D,-,-,-,-,-,-,-,-
+PDF_Links__c,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+PartnerFundAllocation,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+PartnerFundClaim,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+PartnerFundRequest,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+PartnerMarketingBudget,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+Pricebook2,ModifyAll,R VA,R VA,-,-,-,-,-,R,R VA,R,R,R,R,-,-,R,R,R,R,R,R,-,R,R,R,-,-,-,-,-,-,-,-
+Product2,ModifyAll,R VA,R VA,-,-,-,-,R,R,R VA,R,R,R,R,-,-,R,R,R,R,R,R,-,R,R,R,-,-,-,-,-,-,-,-
+ProductItem,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+ProductRequest,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+ProductTransfer,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+ProfileSkill,ModifyAll,R VA,R VA,-,-,-,C R,ModifyAll,C R,-,-,-,-,-,-,-,-,C R,-,-,R,-,-,C R,R,C R,C R U D,C R,-,-,-,-,-,-
+ProfileSkillEndorsement,ModifyAll,R VA,R VA,-,-,-,C R U D,ModifyAll,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,R,-,-,C R U D,R,C R U D,C R U D,C R U D,-,-,-,-,-,-
+ProfileSkillUser,ModifyAll,R VA,R VA,-,-,-,C R U D,ModifyAll,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,C R U D,-,-,C R U D,C R U D,C R U D,C R U D,C R U D,-,-,-,-,-,-
+QuickText,ModifyAll,R VA,R VA,-,-,-,-,-,R,-,-,-,-,-,-,-,-,R,-,-,R,-,-,R,R,R,-,-,-,-,-,-,-,-
+ReturnOrder,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+SOSSession,ModifyAll,R VA,-,-,-,-,-,-,R,-,-,-,-,-,-,-,-,R,-,-,R,-,-,R,R,R,-,-,-,-,-,-,-,-
+Scorecard,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+ScorecardAssociation,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+ScorecardMetric,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
+ServiceAppointment,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,C R U,C R U,-,-,-,-,-,-,-,-
+ServiceCrew,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+ServiceResource,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,C R U,C R U,-,-,-,-,-,-,-,-
+ServiceTerritory,ModifyAll,R VA,R VA,-,-,-,-,R,C R U,-,R,R,R,R,-,-,R,C R U,R,R,R,R,-,C R U,C R U,R,-,-,-,-,-,-,-,-
+Shipment,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+SocialPersona,ModifyAll,R VA,R VA,-,-,-,R,C R U D,C R U D,R VA,C R U,C R U,C R U,C R U,C R U,-,C R U,C R U D,C R U,C R U,R,C R U,-,C R U D,R,C R U D,C R U D,-,-,-,-,-,-,-
+SocialPost,ModifyAll,R VA,R VA,-,-,-,R,C R U D,C R U D,R VA,C R U,C R U,C R U,C R U,C R U,-,C R U,C R U D,C R U,C R U,R,R,-,C R U D,R,C R U D,C R U D,-,-,-,-,-,-,-
+Solution,ModifyAll,R VA,R VA,-,-,-,-,-,C R,-,R,R,R,R,-,-,R,C R,R,R,R,R,-,C R U D,R,C R,-,-,-,-,-,-,-,-
+StreamingChannel,ModifyAll,R VA,R VA,-,-,-,-,-,C R U D,-,-,-,-,-,-,-,-,C R U D,-,-,-,-,-,C R U D,-,C R U D,C R U D,-,-,-,-,-,-,-
+TimeSheet,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U D,-,-,-,-,-,-,-,-
+WorkOrder,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+WorkType,ModifyAll,R VA,R VA,-,-,-,-,C R U D,C R U,-,C R U,C R U,C R U,C R U,-,-,C R U,C R U,C R U,C R U,R,C R U,-,C R U,R,C R U,-,-,-,-,-,-,-,-
+items_Sharepoint__x,ModifyAll,R VA,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-,-
