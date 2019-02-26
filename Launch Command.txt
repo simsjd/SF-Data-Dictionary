@@ -1,6 +1,1 @@
-Copy the below line:
-
-Desktop\"SF Data Dictionary"\python-3.7.2\python.exe Desktop\"SF Data Dictionary"\fieldlevelsecurity.py
-
-Open the command prompt and right click and paste the command
-Hit enter
+Desktop\SF-Data-Dictionary-no-batch-file-or-exe\python-3.7.2\python.exe Desktop\SF-Data-Dictionary-no-batch-file-or-exe\fieldlevelsecurity.py
