@@ -13,6 +13,8 @@ nsp = '{http://soap.sforce.com/2006/04/metadata}'
 fieldToPermissionsForOutput = {'Headers':['Label','Type','Description']}
 objectToPermissionsForOutput = {'Headers':[]}
 userPermissionsForOutput = {'Headers':[]}
+visualforcePagePermissionsForOutput = {'Headers':[]}
+apexClassPermissionsForOutput = {'Headers':[]}
 objectFieldDetailMap = {} # {object: {field: [label, type, description]}}
 permSubFolders = ['/profiles','/permissionsets',]
 
@@ -108,39 +110,55 @@ def read_permission_file(file_path, file_name):
     for elem in objectKeys:
         objectToPermissionsForOutput[elem].append('-')
 
-    userPermKeys = set(userPermissionsForOutput.keys())
-    userPermKeys.discard('Headers')
-    userPermissionsForOutput['Headers'].append(file_name)
-    for elem in root.findall(nsp+'userPermissions'):
-        elem_text = elem.find(nsp+'name').text
-        userPermKeys.discard(elem_text)
-        if elem_text not in userPermissionsForOutput:
-            userPermissionsForOutput[elem_text] = []
-            if (len(userPermissionsForOutput['Headers']) > 1):
+    analyze_permissions(root, userPermissionsForOutput, 'userPermissions', 'name')
+    analyze_permissions(root, visualforcePagePermissionsForOutput, 'pageAccesses', 'apexPage')
+    analyze_permissions(root, apexClassPermissionsForOutput, 'classAccesses', 'apexClass')
+
+
+def analyze_permissions(treeRoot, permissionMap, nodeType, nameNode):
+    permKeys = set(permissionMap.keys())
+    permKeys.discard('Headers')
+    permissionMap['Headers'].append(file_name)
+    for elem in treeRoot.findall(nsp+nodeType):
+        elem_text = elem.find(nsp+nameNode).text
+        permKeys.discard(elem_text)
+        if elem_text not in permissionMap:
+            permissionMap[elem_text] = []
+            if (len(permissionMap['Headers']) > 1):
                 counter = 1
-                while counter < len(userPermissionsForOutput['Headers']):
-                    userPermissionsForOutput[elem_text].append('-')
+                while counter < len(permissionMap['Headers']):
+                    permissionMap[elem_text].append('-')
                     counter += 1
 
         if elem.find(nsp+'enabled').text == 'true':
-            userPermissionsForOutput[elem_text].append('True')
+            permissionMap[elem_text].append('True')
         else:
-            userPermissionsForOutput[elem_text].append('-')
-    for elem in userPermKeys:
-        userPermissionsForOutput[elem].append('-')
+            permissionMap[elem_text].append('-')
+    for elem in permKeys:
+        permissionMap[elem].append('-')
 
 
 def write_output_permission_file():
+    macroExists = os.path.isfile('MacroTemplate.xlsm')
     wb = openpyxl.Workbook()
+    if macroExists:
+        wb = openpyxl.load_workbook(filename = 'MacroTemplate.xlsm', keep_vba = True)
     wsf = wb.active
     wsf.title = 'Field Permissions'
     wso = wb.create_sheet('Object Permissions')
     wsu = wb.create_sheet('User Permissions')
+    wsc = wb.create_sheet('Class Permissions')
+    wsp = wb.create_sheet('Page Permissions')
     populate_format_worksheet(wsf, fieldToPermissionsForOutput)
     populate_format_worksheet(wso, objectToPermissionsForOutput)
     populate_format_worksheet(wsu, userPermissionsForOutput)
+    populate_format_worksheet(wsc, apexClassPermissionsForOutput)
+    populate_format_worksheet(wsp, visualforcePagePermissionsForOutput)
     try:
-        wb.save('DataDictionaryResults.xlsx')
+        if macroExists:
+            wb.save('DataDictionaryResults.xlsm')
+        else:
+            wb.save('DataDictionaryResults.xlsx')
     except PermissionError as e:
         print(e)
         print('Please make sure to close out of the DataDictionaryResults.xlsx file before running this tool.')
@@ -171,5 +189,4 @@ for file_name in os.listdir(src_folder_path+'/objects'):
 for folder in permSubFolders:
     for file_name in os.listdir(src_folder_path+folder):
         read_permission_file(src_folder_path+folder+'/'+file_name, file_name)
-#TODO if success close the window, if error leave open
 write_output_permission_file()
