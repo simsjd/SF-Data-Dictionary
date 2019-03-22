@@ -4,8 +4,8 @@ block_cipher = None
 
 
 a = Analysis(['fieldlevelsecurity.py'],
-             pathex=['C:\\Users\\jsims\\Documents\\git\\SF Data Dictionary'],
-             binaries=[],
+             pathex=['/Users/rv8/Documents/git/SF-Data-Dictionary'],
+             binaries=[('/System/Library/Frameworks/Tk.framework/Tk', 'tk'), ('/System/Library/Frameworks/Tcl.framework/Tcl', 'tcl')],
              datas=[],
              hiddenimports=[],
              hookspath=[],
