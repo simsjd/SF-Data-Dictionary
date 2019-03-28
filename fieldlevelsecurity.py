@@ -179,14 +179,26 @@ def populate_format_worksheet(worksheet, dataInput):
     worksheet.freeze_panes = cell
 
 
+def set_base_folder():
+    folder_path = tkinter.filedialog.askdirectory(title = 'Select the src or main folder')
+    while folder_path != '' and not folder_path.lower().endswith('src') and not folder_path.lower().endswith('main'):
+        print('Please select the src folder if it is in Metadata API format or the main folder if it is in DX format')
+        folder_path = tkinter.filedialog.askdirectory(title = 'Select the src or main folder')
+    if folder_path.endswith('main'):
+        folder_path += '/default'
+    return folder_path
+
+
 # Begin execution
 tkinter.Tk().withdraw()
-src_folder_path = tkinter.filedialog.askdirectory(title = 'Select the src folder')
-
-for file_name in os.listdir(src_folder_path+'/objects'):
-    read_object_file(src_folder_path+'/objects/'+file_name)
+base_folder_path = set_base_folder()
+    
+for file_name in os.listdir(base_folder_path+'/objects'):
+    if not file_name.endswith('.resource-meta.xml'):
+        read_object_file(base_folder_path+'/objects/'+file_name)
 
 for folder in permSubFolders:
-    for file_name in os.listdir(src_folder_path+folder):
-        read_permission_file(src_folder_path+folder+'/'+file_name, file_name)
+    for file_name in os.listdir(base_folder_path+folder):
+        if not file_name.endswith('.resource-meta.xml'):
+            read_permission_file(base_folder_path+folder+'/'+file_name, file_name)
 write_output_permission_file()
