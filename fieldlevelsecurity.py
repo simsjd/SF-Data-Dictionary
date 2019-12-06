@@ -10,7 +10,7 @@ from openpyxl.styles import Font
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
 
-fieldToPermissionsForOutput = {'Headers':['Label','Type','Description']}
+fieldToPermissionsForOutput = {'Headers':['Label','Type','Description','Inline Help Text']}
 objectToPermissionsForOutput = {'Headers':[]}
 userPermissionsForOutput = {'Headers':[]}
 visualforcePagePermissionsForOutput = {'Headers':[]}
@@ -32,6 +32,7 @@ def read_object_file(file_path):
             objectFieldDetailMap[objectName][fieldName] = ['-']
         add_additional_field_information(elem, objectName, fieldName, 'type')
         add_additional_field_information(elem, objectName, fieldName, 'description')
+        add_additional_field_information(elem, objectName, fieldName, 'inlineHelpText')
 
 
 def add_additional_field_information(elem, objectName, fieldName, elemText):
@@ -55,13 +56,13 @@ def read_permission_file(file_path, file_name):
             objFieldList = elem_text.rsplit('.')
             try:
                 fieldData = objectFieldDetailMap[objFieldList[0]][objFieldList[1]]
-                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2]]
+                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2],fieldData[3]]
             except KeyError as e:
                 print(e)
                 print('Skipped over the key since data was not found.')
-                fieldToPermissionsForOutput[elem_text] = ['-','-','-']
-            if (len(fieldToPermissionsForOutput['Headers']) > 4):
-                counter = 4
+                fieldToPermissionsForOutput[elem_text] = ['-','-','-','-']
+            if (len(fieldToPermissionsForOutput['Headers']) > 5):
+                counter = 5
                 while counter < len(fieldToPermissionsForOutput['Headers']):
                     fieldToPermissionsForOutput[elem_text].append('-')
                     counter += 1
