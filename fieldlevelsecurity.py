@@ -14,10 +14,11 @@ fieldToPermissionsForOutput = {'Headers':['Label','Type','Description']}
 objectToPermissionsForOutput = {'Headers':[]}
 userPermissionsForOutput = {'Headers':[]}
 objectFieldDetailMap = {} # {object: {field: [label, type, description]}}
-permSubFolders = ['/profiles','/permissionsets',]
+permSubFolders = ['/profiles','/permissionsets']
 
 
-def read_object_file(file_path):
+
+def read_object_file_metadata(file_path):
     objectName = file_path.rsplit('/', 1)[-1][:-7]
     objectFieldDetailMap[objectName] = {}
     tree = ET.parse(file_path)
@@ -30,6 +31,24 @@ def read_object_file(file_path):
             objectFieldDetailMap[objectName][fieldName] = ['-']
         add_additional_field_information(elem, objectName, fieldName, 'type')
         add_additional_field_information(elem, objectName, fieldName, 'description')
+
+
+def read_object_folder_source(file_path):
+    objectName = file_path.rsplit('/', 1)[-1]
+    objectFieldDetailMap[objectName] = {}
+    try:
+        for field_name in os.listdir(file_path+'/fields'):
+            tree = ET.parse(file_path+'/fields/'+field_name)
+            root = tree.getroot()
+            fieldName = root.find(nsp+'fullName').text
+            objectFieldDetailMap[objectName][fieldName] = []
+            add_additional_field_information(root, objectName, fieldName, 'label')
+            add_additional_field_information(root, objectName, fieldName, 'type')
+            add_additional_field_information(root, objectName, fieldName, 'description')
+    except FileNotFoundError as e:
+        print(e)
+        print('No fields found for '+objectName+'.')
+        del objectFieldDetailMap[objectName]
 
 
 def add_additional_field_information(elem, objectName, fieldName, elemText):
@@ -163,13 +182,29 @@ def populate_format_worksheet(worksheet, dataInput):
 
 # Begin execution
 tkinter.Tk().withdraw()
-src_folder_path = tkinter.filedialog.askdirectory(title = 'Select the src folder')
+folder_path = tkinter.filedialog.askdirectory(title = 'Select the "src" folder for metadata format or the "force-app" folder for source format')
 
-for file_name in os.listdir(src_folder_path+'/objects'):
-    read_object_file(src_folder_path+'/objects/'+file_name)
+if folder_path.endswith("src"):
+    for file_name in os.listdir(folder_path+'/objects'):
+        read_object_file_metadata(folder_path+'/objects/'+file_name)
 
-for folder in permSubFolders:
-    for file_name in os.listdir(src_folder_path+folder):
-        read_permission_file(src_folder_path+folder+'/'+file_name, file_name)
+    for folder in permSubFolders:
+        for file_name in os.listdir(folder_path+folder):
+            read_permission_file(folder_path+folder+'/'+file_name, file_name)
+
+    write_output_permission_file()
+
+elif folder_path.endswith("force-app"):
+    for object_folder in os.listdir(folder_path+'/main/default/objects'):
+        read_object_folder_source(folder_path+'/main/default/objects/'+object_folder)
+ 
+    for folder in permSubFolders:
+        for file_name in os.listdir(folder_path+'/main/default/'+folder):
+            read_permission_file(folder_path+'/main/default/'+folder+'/'+file_name, file_name)
+
+    write_output_permission_file()
+
+else:
+    print('Please select either the "src" folder if the files are in metadata format or the "force-app" folder if the files are in the source (DX) format.')
+
 #TODO if success close the window, if error leave open
-write_output_permission_file()
