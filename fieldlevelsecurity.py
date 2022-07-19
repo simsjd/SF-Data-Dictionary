@@ -7,26 +7,27 @@ from datetime import datetime
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
 
-fieldToPermissionsForOutput = {'Headers':['Label','Type','Description']}
-objectToPermissionsForOutput = {'Headers':[]}
-userPermissionsForOutput = {'Headers':[]}
-objectFieldDetailMap = {} # {object: {field: [label, type, description]}}
-permSubFolders = ['/profiles','/permissionsets']
+fieldToPermissionsForOutput = {'Headers':['Object API','Field API','Label','Type','Description','Inline Help Text']}
+objectToPermissionsForOutput = {'Headers':['API Name']}
+userPermissionsForOutput = {'Headers':['API Name']}
+visualforcePagePermissionsForOutput = {'Headers':['API Name']}
+apexClassPermissionsForOutput = {'Headers':['API Name']}
+objectFieldDetailMap = {} # {object: {field: [label, type, description, etc]}}
+permSubFolders = ['profiles','permissionsets']
 
 
 def read_object_file_metadata(file_path):
-    objectName = file_path.rsplit('/', 1)[-1][:-7]F
+    objectName = file_path.rsplit('/', 1)[-1][:-7]
     objectFieldDetailMap[objectName] = {}
     tree = ET.parse(file_path)
     root = tree.getroot()
     for elem in root.findall(nsp+'fields'):
         fieldName = elem.find(nsp+'fullName').text
-        if elem.find(nsp+'label') is not None:
-            objectFieldDetailMap[objectName][fieldName] = [elem.find(nsp+'label').text]
-        else:
-            objectFieldDetailMap[objectName][fieldName] = ['-']
-        add_additional_field_information(elem, objectName, fieldName, 'type')
-        add_additional_field_information(elem, objectName, fieldName, 'description')
+        objectFieldDetailMap[objectName][fieldName] = []
+        add_field_information(elem, objectName, fieldName, 'label')
+        add_field_information(elem, objectName, fieldName, 'type')
+        add_field_information(elem, objectName, fieldName, 'description')
+        add_field_information(elem, objectName, fieldName, 'inlineHelpText')
 
 
 def read_object_folder_source(file_path):
@@ -38,16 +39,17 @@ def read_object_folder_source(file_path):
             root = tree.getroot()
             fieldName = root.find(nsp+'fullName').text
             objectFieldDetailMap[objectName][fieldName] = []
-            add_additional_field_information(root, objectName, fieldName, 'label')
-            add_additional_field_information(root, objectName, fieldName, 'type')
-            add_additional_field_information(root, objectName, fieldName, 'description')
+            add_field_information(root, objectName, fieldName, 'label')
+            add_field_information(root, objectName, fieldName, 'type')
+            add_field_information(root, objectName, fieldName, 'description')
+            add_field_information(root, objectName, fieldName, 'inlineHelpText')
     except FileNotFoundError as e:
         print(e)
         print('No fields found for '+objectName+'.')
         del objectFieldDetailMap[objectName]
 
 
-def add_additional_field_information(elem, objectName, fieldName, elemText):
+def add_field_information(elem, objectName, fieldName, elemText):
     if elem.find(nsp+elemText) is not None:
         objectFieldDetailMap[objectName][fieldName].append(elem.find(nsp+elemText).text)
     else:
@@ -68,13 +70,13 @@ def read_permission_file(file_path, file_name):
             objFieldList = elem_text.rsplit('.')
             try:
                 fieldData = objectFieldDetailMap[objFieldList[0]][objFieldList[1]]
-                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2]]
+                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2],fieldData[3]]
             except KeyError as e:
                 print(e)
                 print('Skipped over the key since data was not found.')
-                fieldToPermissionsForOutput[elem_text] = ['-','-','-']
-            if (len(fieldToPermissionsForOutput['Headers']) > 4):
-                counter = 4
+                fieldToPermissionsForOutput[elem_text] = ['-','-','-','-']
+            if (len(fieldToPermissionsForOutput['Headers']) > 5):
+                counter = 5
                 while counter < len(fieldToPermissionsForOutput['Headers']):
                     fieldToPermissionsForOutput[elem_text].append('-')
                     counter += 1
@@ -123,77 +125,89 @@ def read_permission_file(file_path, file_name):
     for elem in objectKeys:
         objectToPermissionsForOutput[elem].append('-')
 
-    userPermKeys = set(userPermissionsForOutput.keys())
-    userPermKeys.discard('Headers')
-    userPermissionsForOutput['Headers'].append(file_name)
-    for elem in root.findall(nsp+'userPermissions'):
-        elem_text = elem.find(nsp+'name').text
-        userPermKeys.discard(elem_text)
-        if elem_text not in userPermissionsForOutput:
-            userPermissionsForOutput[elem_text] = []
-            if (len(userPermissionsForOutput['Headers']) > 1):
+    retrieve_permissions(root, userPermissionsForOutput, 'userPermissions', 'name')
+    retrieve_permissions(root, visualforcePagePermissionsForOutput, 'pageAccesses', 'apexPage')
+    retrieve_permissions(root, apexClassPermissionsForOutput, 'classAccesses', 'apexClass')
+
+
+def retrieve_permissions(treeRoot, permissionMap, nodeType, nameNode):
+    permKeys = set(permissionMap.keys())
+    permKeys.discard('Headers')
+    permissionMap['Headers'].append(file_name)
+    for elem in treeRoot.findall(nsp+nodeType):
+        elem_text = elem.find(nsp+nameNode).text
+        permKeys.discard(elem_text)
+        if elem_text not in permissionMap:
+            permissionMap[elem_text] = []
+            if (len(permissionMap['Headers']) > 1):
                 counter = 1
-                while counter < len(userPermissionsForOutput['Headers']):
-                    userPermissionsForOutput[elem_text].append('-')
+                while counter < len(permissionMap['Headers']):
+                    permissionMap[elem_text].append('-')
                     counter += 1
 
         if elem.find(nsp+'enabled').text == 'true':
-            userPermissionsForOutput[elem_text].append('True')
+            permissionMap[elem_text].append('True')
         else:
-            userPermissionsForOutput[elem_text].append('-')
-    for elem in userPermKeys:
-        userPermissionsForOutput[elem].append('-')
+            permissionMap[elem_text].append('-')
+    for elem in permKeys:
+        permissionMap[elem].append('-')
 
 
 def write_output_files():
     write_output_file('FieldPermissions', fieldToPermissionsForOutput)
     write_output_file('ObjectPermissions', objectToPermissionsForOutput)
     write_output_file('UserPermissions', userPermissionsForOutput)
+    write_output_file('ClassPermissions', apexClassPermissionsForOutput)
+    write_output_file('VisualforcePermissions', visualforcePagePermissionsForOutput)
 
 
 def write_output_file(name, dataInput):
     #TODO Possible rewrite the permission maps so I can use csv.DictWriter. Need to see if that
     # would be faster.
-    dt_string = datetime.now.strftime('%d%m%Y-%H%M%S')
+    dt_string = datetime.now().strftime('%Y-%m-%dT%H%M%S')
     fileName = dt_string + '_' + name + '.csv'
     with open(fileName, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csvwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
-        csvwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+        csvwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(dataInput.pop('Headers'))
+        for key, value in dataInput.items():
+            row = []
+            if name == 'FieldPermissions':
+                row.extend(list(key.split('.')))
+            else:
+                row.append(key)
+            row.extend(value)
+            csvwriter.writerow(row)
 
 
-    df = pd.DataFrame.from_dict(data=dataInput, orient='index')
-    for r in dataframe_to_rows(df, index=True, header=False):
-        worksheet.append(r)
-    worksheet.delete_rows(1,1)
-    worksheet['A1'].value = 'API Name'
+def set_base_folder():
+    folder_path = 'SELECT'
+    while folder_path != '' and not folder_path.lower().endswith('src') and not folder_path.lower().endswith('force-app'):
+        print('Select the "src" folder for metadata format or the "force-app" folder for source (DX) format.')
+        folder_path = tkinter.filedialog.askdirectory(title = 'Select the "src" or "force-app" folder')
+    return folder_path
 
 
 # Begin execution
 tkinter.Tk().withdraw()
-folder_path = tkinter.filedialog.askdirectory(title = 'Select the "src" folder for metadata format or the "force-app" folder for source format')
+folder_path = set_base_folder()
+specified_folder_path = folder_path
 
 if folder_path.endswith("src"):
     for file_name in os.listdir(folder_path+'/objects'):
         read_object_file_metadata(folder_path+'/objects/'+file_name)
 
-    for folder in permSubFolders:
-        for file_name in os.listdir(folder_path+folder):
-            read_permission_file(folder_path+folder+'/'+file_name, file_name)
-
-    write_output_files()
-
 elif folder_path.endswith("force-app"):
     for object_folder in os.listdir(folder_path+'/main/default/objects'):
         read_object_folder_source(folder_path+'/main/default/objects/'+object_folder)
+
+    specified_folder_path = folder_path+'/main/default/'
  
-    for folder in permSubFolders:
-        for file_name in os.listdir(folder_path+'/main/default/'+folder):
-            read_permission_file(folder_path+'/main/default/'+folder+'/'+file_name, file_name)
-
-    write_output_files()
-
 else:
-    print('Please select either the "src" folder if the files are in metadata format or the "force-app" folder if the files are in the source (DX) format.')
+    print('Select either the "src" folder if the files are in metadata format or the "force-app" folder if the files are in the source (DX) format.')
+    exit()
 
-#TODO if success close the window, if error leave open
+for folder in permSubFolders:
+    for file_name in os.listdir(specified_folder_path+folder):
+        read_permission_file(specified_folder_path+folder+'/'+file_name, file_name)
+
+write_output_files()
