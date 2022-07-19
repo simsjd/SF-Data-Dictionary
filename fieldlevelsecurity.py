@@ -2,10 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
-import pandas as pd
-import openpyxl
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.styles import Font
+from datetime import datetime
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
@@ -17,9 +14,8 @@ objectFieldDetailMap = {} # {object: {field: [label, type, description]}}
 permSubFolders = ['/profiles','/permissionsets']
 
 
-
 def read_object_file_metadata(file_path):
-    objectName = file_path.rsplit('/', 1)[-1][:-7]
+    objectName = file_path.rsplit('/', 1)[-1][:-7]F
     objectFieldDetailMap[objectName] = {}
     tree = ET.parse(file_path)
     root = tree.getroot()
@@ -149,35 +145,28 @@ def read_permission_file(file_path, file_name):
         userPermissionsForOutput[elem].append('-')
 
 
-def write_output_permission_file():
-    wb = openpyxl.Workbook()
-    wsf = wb.active
-    wsf.title = 'Field Permissions'
-    wso = wb.create_sheet('Object Permissions')
-    wsu = wb.create_sheet('User Permissions')
-    populate_format_worksheet(wsf, fieldToPermissionsForOutput)
-    populate_format_worksheet(wso, objectToPermissionsForOutput)
-    populate_format_worksheet(wsu, userPermissionsForOutput)
-    try:
-        wb.save('DataDictionaryResults.xlsx')
-    except PermissionError as e:
-        print(e)
-        print('Please make sure to close out of the DataDictionaryResults.xlsx file before running this tool.')
+def write_output_files():
+    write_output_file('FieldPermissions', fieldToPermissionsForOutput)
+    write_output_file('ObjectPermissions', objectToPermissionsForOutput)
+    write_output_file('UserPermissions', userPermissionsForOutput)
 
 
-def populate_format_worksheet(worksheet, dataInput):
+def write_output_file(name, dataInput):
+    #TODO Possible rewrite the permission maps so I can use csv.DictWriter. Need to see if that
+    # would be faster.
+    dt_string = datetime.now.strftime('%d%m%Y-%H%M%S')
+    fileName = dt_string + '_' + name + '.csv'
+    with open(fileName, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+        csvwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+
+
     df = pd.DataFrame.from_dict(data=dataInput, orient='index')
     for r in dataframe_to_rows(df, index=True, header=False):
         worksheet.append(r)
     worksheet.delete_rows(1,1)
     worksheet['A1'].value = 'API Name'
-    header_font = openpyxl.styles.Font(bold=True)
-    for cell in worksheet['1:1']:
-        cell.font = header_font
-    for cell in worksheet['A:A']:
-        cell.font = header_font
-    cell = worksheet['B2']
-    worksheet.freeze_panes = cell
 
 
 # Begin execution
@@ -192,7 +181,7 @@ if folder_path.endswith("src"):
         for file_name in os.listdir(folder_path+folder):
             read_permission_file(folder_path+folder+'/'+file_name, file_name)
 
-    write_output_permission_file()
+    write_output_files()
 
 elif folder_path.endswith("force-app"):
     for object_folder in os.listdir(folder_path+'/main/default/objects'):
@@ -202,7 +191,7 @@ elif folder_path.endswith("force-app"):
         for file_name in os.listdir(folder_path+'/main/default/'+folder):
             read_permission_file(folder_path+'/main/default/'+folder+'/'+file_name, file_name)
 
-    write_output_permission_file()
+    write_output_files()
 
 else:
     print('Please select either the "src" folder if the files are in metadata format or the "force-app" folder if the files are in the source (DX) format.')
