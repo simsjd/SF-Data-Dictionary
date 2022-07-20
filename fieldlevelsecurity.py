@@ -10,15 +10,16 @@ from openpyxl.styles import Font
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
 
-fieldToPermissionsForOutput = {'Headers':['Label','Type','Description']}
+fieldToPermissionsForOutput = {'Headers':['Label','Type','Description','Inline Help Text']}
 objectToPermissionsForOutput = {'Headers':[]}
 userPermissionsForOutput = {'Headers':[]}
+visualforcePagePermissionsForOutput = {'Headers':[]}
+apexClassPermissionsForOutput = {'Headers':[]}
 objectFieldDetailMap = {} # {object: {field: [label, type, description]}}
-permSubFolders = ['/profiles','/permissionsets']
+permSubFolders = ['/profiles','/permissionsets',]
 
 
-
-def read_object_file_metadata(file_path):
+def read_object_file(file_path):
     objectName = file_path.rsplit('/', 1)[-1][:-7]
     objectFieldDetailMap[objectName] = {}
     tree = ET.parse(file_path)
@@ -31,7 +32,7 @@ def read_object_file_metadata(file_path):
             objectFieldDetailMap[objectName][fieldName] = ['-']
         add_additional_field_information(elem, objectName, fieldName, 'type')
         add_additional_field_information(elem, objectName, fieldName, 'description')
-
+        add_additional_field_information(elem, objectName, fieldName, 'inlineHelpText')
 
 def read_object_folder_source(file_path):
     objectName = file_path.rsplit('/', 1)[-1]
@@ -49,8 +50,7 @@ def read_object_folder_source(file_path):
         print(e)
         print('No fields found for '+objectName+'.')
         del objectFieldDetailMap[objectName]
-
-
+        
 def add_additional_field_information(elem, objectName, fieldName, elemText):
     if elem.find(nsp+elemText) is not None:
         objectFieldDetailMap[objectName][fieldName].append(elem.find(nsp+elemText).text)
@@ -72,13 +72,13 @@ def read_permission_file(file_path, file_name):
             objFieldList = elem_text.rsplit('.')
             try:
                 fieldData = objectFieldDetailMap[objFieldList[0]][objFieldList[1]]
-                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2]]
+                fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2],fieldData[3]]
             except KeyError as e:
                 print(e)
                 print('Skipped over the key since data was not found.')
-                fieldToPermissionsForOutput[elem_text] = ['-','-','-']
-            if (len(fieldToPermissionsForOutput['Headers']) > 4):
-                counter = 4
+                fieldToPermissionsForOutput[elem_text] = ['-','-','-','-']
+            if (len(fieldToPermissionsForOutput['Headers']) > 5):
+                counter = 5
                 while counter < len(fieldToPermissionsForOutput['Headers']):
                     fieldToPermissionsForOutput[elem_text].append('-')
                     counter += 1
@@ -127,39 +127,55 @@ def read_permission_file(file_path, file_name):
     for elem in objectKeys:
         objectToPermissionsForOutput[elem].append('-')
 
-    userPermKeys = set(userPermissionsForOutput.keys())
-    userPermKeys.discard('Headers')
-    userPermissionsForOutput['Headers'].append(file_name)
-    for elem in root.findall(nsp+'userPermissions'):
-        elem_text = elem.find(nsp+'name').text
-        userPermKeys.discard(elem_text)
-        if elem_text not in userPermissionsForOutput:
-            userPermissionsForOutput[elem_text] = []
-            if (len(userPermissionsForOutput['Headers']) > 1):
+    analyze_permissions(root, userPermissionsForOutput, 'userPermissions', 'name')
+    analyze_permissions(root, visualforcePagePermissionsForOutput, 'pageAccesses', 'apexPage')
+    analyze_permissions(root, apexClassPermissionsForOutput, 'classAccesses', 'apexClass')
+
+
+def analyze_permissions(treeRoot, permissionMap, nodeType, nameNode):
+    permKeys = set(permissionMap.keys())
+    permKeys.discard('Headers')
+    permissionMap['Headers'].append(file_name)
+    for elem in treeRoot.findall(nsp+nodeType):
+        elem_text = elem.find(nsp+nameNode).text
+        permKeys.discard(elem_text)
+        if elem_text not in permissionMap:
+            permissionMap[elem_text] = []
+            if (len(permissionMap['Headers']) > 1):
                 counter = 1
-                while counter < len(userPermissionsForOutput['Headers']):
-                    userPermissionsForOutput[elem_text].append('-')
+                while counter < len(permissionMap['Headers']):
+                    permissionMap[elem_text].append('-')
                     counter += 1
 
         if elem.find(nsp+'enabled').text == 'true':
-            userPermissionsForOutput[elem_text].append('True')
+            permissionMap[elem_text].append('True')
         else:
-            userPermissionsForOutput[elem_text].append('-')
-    for elem in userPermKeys:
-        userPermissionsForOutput[elem].append('-')
+            permissionMap[elem_text].append('-')
+    for elem in permKeys:
+        permissionMap[elem].append('-')
 
 
 def write_output_permission_file():
+    macroExists = os.path.isfile('MacroTemplate.xlsm')
     wb = openpyxl.Workbook()
+    if macroExists:
+        wb = openpyxl.load_workbook(filename = 'MacroTemplate.xlsm', keep_vba = True)
     wsf = wb.active
     wsf.title = 'Field Permissions'
     wso = wb.create_sheet('Object Permissions')
     wsu = wb.create_sheet('User Permissions')
+    wsc = wb.create_sheet('Class Permissions')
+    wsp = wb.create_sheet('Page Permissions')
     populate_format_worksheet(wsf, fieldToPermissionsForOutput)
     populate_format_worksheet(wso, objectToPermissionsForOutput)
     populate_format_worksheet(wsu, userPermissionsForOutput)
+    populate_format_worksheet(wsc, apexClassPermissionsForOutput)
+    populate_format_worksheet(wsp, visualforcePagePermissionsForOutput)
     try:
-        wb.save('DataDictionaryResults.xlsx')
+        #if macroExists:
+        #    wb.save('DataDictionaryResults.xlsm')
+       # else:
+            wb.save('DataDictionaryResults.xlsx')
     except PermissionError as e:
         print(e)
         print('Please make sure to close out of the DataDictionaryResults.xlsx file before running this tool.')
@@ -180,31 +196,26 @@ def populate_format_worksheet(worksheet, dataInput):
     worksheet.freeze_panes = cell
 
 
+def set_base_folder():
+    folder_path = tkinter.filedialog.askdirectory(title = 'Select the src or main folder')
+    while folder_path != '' and not folder_path.lower().endswith('src') and not folder_path.lower().endswith('main'):
+        print('Please select the src folder if it is in Metadata API format or the main folder if it is in DX format')
+        folder_path = tkinter.filedialog.askdirectory(title = 'Select the src or main folder')
+    if folder_path.endswith('main'):
+        folder_path += '/default'
+    return folder_path
+
+
 # Begin execution
 tkinter.Tk().withdraw()
-folder_path = tkinter.filedialog.askdirectory(title = 'Select the "src" folder for metadata format or the "force-app" folder for source format')
+base_folder_path = set_base_folder()
+    
+for file_name in os.listdir(base_folder_path+'/objects'):
+    if not file_name.endswith('.resource-meta.xml'):
+        read_object_file(base_folder_path+'/objects/'+file_name)
 
-if folder_path.endswith("src"):
-    for file_name in os.listdir(folder_path+'/objects'):
-        read_object_file_metadata(folder_path+'/objects/'+file_name)
-
-    for folder in permSubFolders:
-        for file_name in os.listdir(folder_path+folder):
-            read_permission_file(folder_path+folder+'/'+file_name, file_name)
-
-    write_output_permission_file()
-
-elif folder_path.endswith("force-app"):
-    for object_folder in os.listdir(folder_path+'/main/default/objects'):
-        read_object_folder_source(folder_path+'/main/default/objects/'+object_folder)
- 
-    for folder in permSubFolders:
-        for file_name in os.listdir(folder_path+'/main/default/'+folder):
-            read_permission_file(folder_path+'/main/default/'+folder+'/'+file_name, file_name)
-
-    write_output_permission_file()
-
-else:
-    print('Please select either the "src" folder if the files are in metadata format or the "force-app" folder if the files are in the source (DX) format.')
-
-#TODO if success close the window, if error leave open
+for folder in permSubFolders:
+    for file_name in os.listdir(base_folder_path+folder):
+        if not file_name.endswith('.resource-meta.xml'):
+            read_permission_file(base_folder_path+folder+'/'+file_name, file_name)
+write_output_permission_file()
