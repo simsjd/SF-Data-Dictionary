@@ -2,6 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
+import re
 from datetime import datetime
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
@@ -52,14 +53,14 @@ def read_object_folder_source(file_path):
         print('No fields found for '+objectName+'.')
 
 
-def setObjectLabel(root, objectName)
+def setObjectLabel(root, objectName):
     if root.find(nsp+'label') is not None:
         objectLabel = root.find(nsp+'label').text
         objectFieldDetailMap[objectName]['Details'] = [objectLabel]
-    else if objectName.endswith('__c') or objectName.endswith('__mdt'):
+    elif objectName.endswith('__c') or objectName.endswith('__mdt'):
         objectFieldDetailMap[objectName]['Details'] = [objectName.replace('__c','').replace('__mdt','').replace('_',' ')]
     else:
-        objectFieldDetailMap[objectName]['Details'] = [objectName.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', label)]
+        objectFieldDetailMap[objectName]['Details'] = [re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', objectName)]
 
 
 def add_field_information(elem, objectName, fieldName, elemText):
@@ -112,7 +113,6 @@ def read_permission_file(file_path, file_name):
                 objectToPermissionsForOutput[elem_text] = [objectLabel]
             except KeyError as e:
                 objectToPermissionsForOutput[elem_text] = ['-']
-            objectToPermissionsForOutput[elem_text] = []
             counter = 2
             while counter < len(objectToPermissionsForOutput['Headers'])-1:
                 objectToPermissionsForOutput[elem_text].append('-')
@@ -208,11 +208,11 @@ specified_folder_path = folder_path
 if folder_path.endswith("src"):
     for file_name in os.listdir(folder_path+'/objects'):
         read_object_file_metadata(folder_path+'/objects/'+file_name)
+        specified_folder_path = folder_path+'/'
 
 elif folder_path.endswith("force-app"):
     for object_folder in os.listdir(folder_path+'/main/default/objects'):
         read_object_folder_source(folder_path+'/main/default/objects/'+object_folder)
-
     specified_folder_path = folder_path+'/main/default/'
  
 else:
