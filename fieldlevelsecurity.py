@@ -7,20 +7,22 @@ from datetime import datetime
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
 nsp = '{http://soap.sforce.com/2006/04/metadata}'
 
-fieldToPermissionsForOutput = {'Headers':['Object API','Field API','Label','Type','Description','Inline Help Text']}
-objectToPermissionsForOutput = {'Headers':['API Name']}
+fieldToPermissionsForOutput = {'Headers':['Object API Name','Field API Name','Field Label','Type','Description','Inline Help Text']}
+objectToPermissionsForOutput = {'Headers':['API Name','Label']}
 userPermissionsForOutput = {'Headers':['API Name']}
 visualforcePagePermissionsForOutput = {'Headers':['API Name']}
 apexClassPermissionsForOutput = {'Headers':['API Name']}
-objectFieldDetailMap = {} # {object: {field: [label, type, description, etc]}}
+objectFieldDetailMap = {} # {object: {Details: [Name], field: [label, type, description, etc]}}
 permSubFolders = ['profiles','permissionsets']
 
 
 def read_object_file_metadata(file_path):
     objectName = file_path.rsplit('/', 1)[-1][:-7]
     objectFieldDetailMap[objectName] = {}
+    objectFieldDetailMap[objectName]['Details'] = []
     tree = ET.parse(file_path)
     root = tree.getroot()
+    setObjectLabel(root, objectName)
     for elem in root.findall(nsp+'fields'):
         fieldName = elem.find(nsp+'fullName').text
         objectFieldDetailMap[objectName][fieldName] = []
@@ -33,6 +35,9 @@ def read_object_file_metadata(file_path):
 def read_object_folder_source(file_path):
     objectName = file_path.rsplit('/', 1)[-1]
     objectFieldDetailMap[objectName] = {}
+    tree = ET.parse(file_path+'/'+objectName+'.object-meta.xml')
+    root = tree.getroot()
+    setObjectLabel(root, objectName)
     try:
         for field_name in os.listdir(file_path+'/fields'):
             tree = ET.parse(file_path+'/fields/'+field_name)
@@ -44,9 +49,17 @@ def read_object_folder_source(file_path):
             add_field_information(root, objectName, fieldName, 'description')
             add_field_information(root, objectName, fieldName, 'inlineHelpText')
     except FileNotFoundError as e:
-        print(e)
         print('No fields found for '+objectName+'.')
-        del objectFieldDetailMap[objectName]
+
+
+def setObjectLabel(root, objectName)
+    if root.find(nsp+'label') is not None:
+        objectLabel = root.find(nsp+'label').text
+        objectFieldDetailMap[objectName]['Details'] = [objectLabel]
+    else if objectName.endswith('__c') or objectName.endswith('__mdt'):
+        objectFieldDetailMap[objectName]['Details'] = [objectName.replace('__c','').replace('__mdt','').replace('_',' ')]
+    else:
+        objectFieldDetailMap[objectName]['Details'] = [objectName.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', label)]
 
 
 def add_field_information(elem, objectName, fieldName, elemText):
@@ -72,14 +85,11 @@ def read_permission_file(file_path, file_name):
                 fieldData = objectFieldDetailMap[objFieldList[0]][objFieldList[1]]
                 fieldToPermissionsForOutput[elem_text] = [fieldData[0],fieldData[1],fieldData[2],fieldData[3]]
             except KeyError as e:
-                print(e)
-                print('Skipped over the key since data was not found.')
                 fieldToPermissionsForOutput[elem_text] = ['-','-','-','-']
-            if (len(fieldToPermissionsForOutput['Headers']) > 5):
-                counter = 5
-                while counter < len(fieldToPermissionsForOutput['Headers']):
-                    fieldToPermissionsForOutput[elem_text].append('-')
-                    counter += 1
+            counter = 6
+            while counter < len(fieldToPermissionsForOutput['Headers'])-1:
+                fieldToPermissionsForOutput[elem_text].append('-')
+                counter += 1
 
         if elem.find(nsp+'editable').text == 'true':
             fieldToPermissionsForOutput[elem_text].append('Edit')
@@ -97,12 +107,16 @@ def read_permission_file(file_path, file_name):
         elem_text = elem.find(nsp+'object').text
         objectKeys.discard(elem_text)
         if elem_text not in objectToPermissionsForOutput:
+            try:
+                objectLabel = objectFieldDetailMap[elem_text]['Details'][0]
+                objectToPermissionsForOutput[elem_text] = [objectLabel]
+            except KeyError as e:
+                objectToPermissionsForOutput[elem_text] = ['-']
             objectToPermissionsForOutput[elem_text] = []
-            if (len(objectToPermissionsForOutput['Headers']) > 1):
-                counter = 1
-                while counter < len(objectToPermissionsForOutput['Headers']):
-                    objectToPermissionsForOutput[elem_text].append('-')
-                    counter += 1
+            counter = 2
+            while counter < len(objectToPermissionsForOutput['Headers'])-1:
+                objectToPermissionsForOutput[elem_text].append('-')
+                counter += 1
 
         if elem.find(nsp+'modifyAllRecords').text == 'true':
             objectToPermissionsForOutput[elem_text].append('ModifyAll')
@@ -139,11 +153,10 @@ def retrieve_permissions(treeRoot, permissionMap, nodeType, nameNode):
         permKeys.discard(elem_text)
         if elem_text not in permissionMap:
             permissionMap[elem_text] = []
-            if (len(permissionMap['Headers']) > 1):
-                counter = 1
-                while counter < len(permissionMap['Headers']):
-                    permissionMap[elem_text].append('-')
-                    counter += 1
+            counter = 1
+            while counter < len(permissionMap['Headers'])-1:
+                permissionMap[elem_text].append('-')
+                counter += 1
 
         if elem.find(nsp+'enabled').text == 'true':
             permissionMap[elem_text].append('True')
@@ -167,7 +180,7 @@ def write_output_file(name, dataInput):
     dt_string = datetime.now().strftime('%Y-%m-%dT%H%M%S')
     fileName = dt_string + '_' + name + '.csv'
     with open(fileName, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         csvwriter.writerow(dataInput.pop('Headers'))
         for key, value in dataInput.items():
             row = []
