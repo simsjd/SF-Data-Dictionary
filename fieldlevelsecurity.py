@@ -23,7 +23,7 @@ def read_object_file_metadata(file_path):
     objectFieldDetailMap[objectName]['Details'] = []
     tree = ET.parse(file_path)
     root = tree.getroot()
-    setObjectLabel(root, objectName)
+    objectFieldDetailMap[objectName]['Details'] = [getObjectLabel(root, objectName)]
     for elem in root.findall(nsp+'fields'):
         fieldName = elem.find(nsp+'fullName').text
         objectFieldDetailMap[objectName][fieldName] = []
@@ -38,7 +38,7 @@ def read_object_folder_source(file_path):
     objectFieldDetailMap[objectName] = {}
     tree = ET.parse(file_path+'/'+objectName+'.object-meta.xml')
     root = tree.getroot()
-    setObjectLabel(root, objectName)
+    objectFieldDetailMap[objectName]['Details'] = [getObjectLabel(root, objectName)]
     try:
         for field_name in os.listdir(file_path+'/fields'):
             tree = ET.parse(file_path+'/fields/'+field_name)
@@ -53,14 +53,14 @@ def read_object_folder_source(file_path):
         print('No fields found for '+objectName+'.')
 
 
-def setObjectLabel(root, objectName):
-    if root.find(nsp+'label') is not None:
+def getObjectLabel(root, objectName):
+    if root is not None and root.find(nsp+'label') is not None:
         objectLabel = root.find(nsp+'label').text
-        objectFieldDetailMap[objectName]['Details'] = [objectLabel]
+        return objectLabel
     elif objectName.endswith('__c') or objectName.endswith('__mdt'):
-        objectFieldDetailMap[objectName]['Details'] = [objectName.replace('__c','').replace('__mdt','').replace('_',' ')]
+        return objectName.replace('__c','').replace('__mdt','').replace('_',' ')
     else:
-        objectFieldDetailMap[objectName]['Details'] = [re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', objectName)]
+        return re.sub(r'((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))', r' \1', objectName)
 
 
 def add_field_information(elem, objectName, fieldName, elemText):
@@ -112,7 +112,7 @@ def read_permission_file(file_path, file_name):
                 objectLabel = objectFieldDetailMap[elem_text]['Details'][0]
                 objectToPermissionsForOutput[elem_text] = [objectLabel]
             except KeyError as e:
-                objectToPermissionsForOutput[elem_text] = ['-']
+                objectToPermissionsForOutput[elem_text] = [getObjectLabel(None, elem_text)]
             counter = 2
             while counter < len(objectToPermissionsForOutput['Headers'])-1:
                 objectToPermissionsForOutput[elem_text].append('-')
