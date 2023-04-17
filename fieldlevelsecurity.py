@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 import tkinter.filedialog
 import csv
 import re
+import sys
 from datetime import datetime
 
 ET.register_namespace('', 'http://soap.sforce.com/2006/04/metadata')
@@ -91,10 +92,11 @@ def read_permission_file(file_path, file_name):
             while counter < len(fieldToPermissionsForOutput['Headers'])-1:
                 fieldToPermissionsForOutput[elem_text].append('-')
                 counter += 1
-
-        if elem.find(nsp+'editable').text == 'true':
+        editTag = elem.find(nsp+'editable')
+        readTag = elem.find(nsp+'readable')
+        if editTag is not None and editTag.text == 'true':
             fieldToPermissionsForOutput[elem_text].append('Edit')
-        elif elem.find(nsp+'readable').text == 'true':
+        elif readTag is not None and readTag.text == 'true':
             fieldToPermissionsForOutput[elem_text].append('Read')
         else:
             fieldToPermissionsForOutput[elem_text].append('-')
@@ -178,7 +180,11 @@ def write_output_file(name, dataInput):
     #TODO Possible rewrite the permission maps so I can use csv.DictWriter. Need to see if that
     # would be faster.
     dt_string = datetime.now().strftime('%Y-%m-%dT%H%M%S')
-    fileName = dt_string + '_' + name + '.csv'
+    fileName = ''
+    if len(sys.argv) > 1:
+        fileName = dt_string + '_' + name + '_' + sys.argv[1] + '.csv'
+    else:
+        fileName = dt_string + '_' + name + '.csv'
     with open(fileName, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         csvwriter.writerow(dataInput.pop('Headers'))
